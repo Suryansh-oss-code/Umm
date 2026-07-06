@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lecture Report App</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+            margin-top: 10px;
+            display: none;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        .auth-card {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 30px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #38bdf8;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #38bdf8;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+
+        input[readonly] {
+            background: rgba(255, 255, 255, 0.02);
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            resize: none;
+            overflow-y: hidden;
+            min-height: 45px;
+            line-height: 1.5;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #38bdf8;
+            color: #0f172a;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-add {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-submit {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 950px;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 14px;
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 14px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 14px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-completed { color: #10b981; font-weight: 500; }
+        .status-not-completed { color: #f59e0b; font-weight: 500; }
+
+        .popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: translateY(-100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 1000;
+        }
+
+        .popup.show { transform: translateY(0); opacity: 1; }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top: 4px solid #38bdf8;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p id="overlayText" style="color: #38bdf8;">Connecting to database...</p>
+    </div>
+
+    <div id="popup" class="popup">Data Saved Successfully! ✅</div>
+
+    <div id="view-login" class="container active auth-card">
+        <h2>Report Portal System</h2>
+        <div class="input-group">
+            <label>Secure Access PIN</label>
+            <input type="password" id="portalKey" placeholder="••••" inputmode="numeric">
+        </div>
+        <button class="btn-primary" onclick="verifyLogin()">Open App</button>
+    </div>
+
+    <div id="view-teacher" class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Daily Report Entry</h2>
+            <button class="logout-btn" onclick="logout()">Exit</button>
+        </div>
+        
+        <form id="reportForm" onsubmit="handleFormSubmit(event)">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 12%;">Date</th>
+                            <th style="width: 18%;">Subject</th>
+                            <th style="width: 32%;">Topic Covered</th>
+                            <th style="width: 13%;">Duration</th>
+                            <th style="width: 12%;">Lecture No.</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 3%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div class="btn-container">
+                <button type="button" class="btn-add" onclick="addNewRow()">+ Add Activity</button>
+                <button type="submit" class="btn-submit">Submit Data</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="view-admin" class="container">
+        <div class="admin-header">
+            <h2>Admin Daily Feed</h2>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit" onclick="exportToExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+                <button class="logout-btn" onclick="logout()">Exit</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Subject</th>
+                        <th>Topic Covered</th>
+                        <th>Duration</th>
+                        <th>Lecture No.</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // System Config Keys
+        const TEACHER_PIN = "1234"; 
+        const ADMIN_PIN = "admin786";
+        
+        // ⚠️ PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL HERE
+        const WEB_APP_URL = "YOUR_APPS_SCRIPT_URL_HERE"; 
+
+        let rawAdminData = [];
+
+        // Generates default locked system dates
+        function getFormattedDate() {
+            const today = new Date();
+            return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        }
+
+        function adjustTextareaHeight(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
+        function updateStatusStyle(el) {
+            el.className = el.value === "Completed" ? "status-completed" : "status-not-completed";
+        }
+
+        function updateDeleteButtons() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                row.querySelector('.action-cell').innerHTML = rows.length > 1 ? '<button type="button" class="btn-delete" onclick="deleteRow(this)">✕</button>' : '';
+            });
+        }
+
+        // Generates active editable field sequence grids for teachers
+        function addNewRow() {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="date" value="${getFormattedDate()}" readonly></td>
+                <td>
+                    <select required>
+                        <option value="" disabled selected>Select Subject</option>
+                        <option value="English">English</option>
+                        <option value="Maths">Maths</option>
+                        <option value="General Awareness">General Awareness</option>
+                        <option value="Reasoning">Reasoning</option>
+                    </select>
+                </td>
+                <td><textarea placeholder="Write topic details..." required oninput="adjustTextareaHeight(this)"></textarea></td>
+                <td><input type="text" placeholder="e.g. 2 hrs" required></td>
+                <td><input type="text" placeholder="e.g. 1" required></td>
+                <td>
+                    <select class="status-completed" onchange="updateStatusStyle(this)" required>
+                        <option value="Completed">Completed</option>
+                        <option value="Not Completed">Not Completed</option>
+                    </select>
+                </td>
+                <td class="action-cell"></td>
+            `;
+            tbody.appendChild(tr);
+            adjustTextareaHeight(tr.querySelector('textarea'));
+            updateDeleteButtons();
+        }
+
+        function deleteRow(btn) {
+            btn.closest('tr').remove();
+            updateDeleteButtons();
+        }
+
+        function toggleOverlay(show, text = "") {
+            document.getElementById('overlayText').innerText = text;
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        // Direct Routing Branching Core Engine
+        function verifyLogin() {
+            const key = document.getElementById('portalKey').value.trim();
+            if (key === TEACHER_PIN) {
+                localStorage.setItem('user_session', 'teacher');
+                document.getElementById('tableBody').innerHTML = ''; 
+                showView('view-teacher');
+                addNewRow(); 
+            } else if (key === ADMIN_PIN) {
+                localStorage.setItem('user_session', 'admin');
+                showView('view-admin');
+                fetchAdminData();
+            } else {
+                alert("Incorrect Access PIN!");
+            }
+        }
+
+        // Global cache flushing mechanism on session completion
+        function logout() {
+            localStorage.clear(); 
+            document.getElementById('portalKey').value = '';
+            showView('view-login');
+        }
+
+        // Packages bulk datasets and pipelines to Cloud Database Spreadsheet
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            toggleOverlay(true, "Uploading records live to feed...");
+            
+            const payload = [];
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                const inputs = row.querySelectorAll('input, textarea, select');
+                payload.push({
+                    date: inputs[0].value,
+                    subject: inputs[1].value,
+                    report: inputs[2].value,
+                    duration: inputs[3].value,
+                    lectureNo: inputs[4].value,
+                    status: inputs[5].value
+                });
+            });
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "insert", rows: payload })
+            })
+            .then(() => {
+                toggleOverlay(false);
+                const p = document.getElementById('popup');
+                p.classList.add('show');
+                setTimeout(() => p.classList.remove('show'), 2500);
+                
+                document.getElementById('reportForm').reset();
+                document.getElementById('tableBody').innerHTML = '';
+                addNewRow();
+            })
+            .catch(() => {
+                toggleOverlay(false);
+                document.getElementById('reportForm').reset();
+                document.getElementById('tableBody').innerHTML = '';
+                addNewRow();
+            });
+        }
+
+        // Pulls structured database sequences
+        function fetchAdminData() {
+            toggleOverlay(true, "Downloading master daily feed...");
+            fetch(`${WEB_APP_URL}?action=read`)
+            .then(res => res.json())
+            .then(data => {
+                toggleOverlay(false);
+                rawAdminData = data;
+                renderAdminTable();
+            })
+            .catch(() => toggleOverlay(false));
+        }
+
+        // Flushes clean structured data vectors onto admin board text layout 
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = rawAdminData.map(row => `
+                <tr>
+                    <td>${row[0]}</td>
+                    <td>${row[1]}</td>
+                    <td>${row[2]}</td>
+                    <td>${row[3]}</td>
+                    <td>${row[4]}</td>
+                    <td><span class="${row[5] === 'Completed' ? 'status-completed' : 'status-not-completed'}">${row[5]}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function exportToExcel() {
+            const ws = XLSX.utils.aoa_to_sheet([["Date", "Subject", "Topic Covered", "Duration", "Lecture No.", "Status"]].concat(rawAdminData));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "MasterFeed");
+            XLSX.writeFile(wb, "System_Daily_Feed_Report.xlsx");
+        }
+
+        // Live persistence status routines
+        window.onload = function() {
+            const session = localStorage.getItem('user_session');
+            if(session === 'teacher') {
+                showView('view-teacher');
+                if(!document.getElementById('tableBody').children.length) addNewRow();
+            } else if(session === 'admin') {
+                showView('view-admin');
+                fetchAdminData();
+            }
+        }
+    </script>
+</body>
+</html>
